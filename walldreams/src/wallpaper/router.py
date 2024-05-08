@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import SessionLocal
-from ..services.wallpaper import get_wallpaper, create_wallpaper
-from ..models.wallpaper import Wallpaper
+from .service import get_wallpaper, create_wallpaper
+from .models import *
 
 router = APIRouter()
 

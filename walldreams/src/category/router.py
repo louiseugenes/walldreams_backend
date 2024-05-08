@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import SessionLocal
-from ..services.wallpaper import get_wallpaper, create_wallpaper
-from ..models.wallpaper import Wallpaper
+from .service import *
+from .models import *
 
 router = APIRouter()
 
@@ -13,13 +13,13 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/wallpapers/{wallpaper_id}")
-async def read_wallpaper(wallpaper_id: int, db: Session = Depends(get_db)):
-    wallpaper = get_wallpaper(db, wallpaper_id)
-    if wallpaper is None:
-        raise HTTPException(status_code=404, detail="Wallpaper not found")
-    return wallpaper
+@router.get("/categorys/{category_id}")
+async def read_category(category_id: int, db: Session = Depends(get_db)):
+    category = get_category(db, category_id)
+    if category is None:
+        raise HTTPException(status_code=404, detail="category not found")
+    return category
 
-@router.post("/wallpapers/")
-async def create_wallpaper(wallpaper_data: Wallpaper, db: Session = Depends(get_db)):
-    return create_wallpaper(db, wallpaper_data.dict())
+@router.post("/categorys/")
+async def create_category(category_data: Category, db: Session = Depends(get_db)):
+    return create_category(db, category_data.dict())
