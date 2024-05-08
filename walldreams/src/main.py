@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from walldreams.routers import wallpaper
+from wallpaper.router import wallpaper
 
 app = FastAPI()
 
