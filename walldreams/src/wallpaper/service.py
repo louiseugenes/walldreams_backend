@@ -68,17 +68,27 @@ def update_wallpaper_db(db: Session, wallpaper_id: int, title: str, description:
 
 
 def record_download(db: Session, wallpaper_id: int, name: str, email: str):
-    wallpaper = db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
-    if not wallpaper:
-        return False
-    download = Download(
-        wallpaper_id=wallpaper_id,
-        download_datetime=datetime.now(),
-        name=name,
-        email=email
-    )
-    db.add(download)
-    wallpaper.download_count += 1
-    db.commit()
-    db.refresh(wallpaper)
-    return True
+    try:
+        wallpaper = db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
+        if not wallpaper:
+            return False
+        download = Download(
+            wallpaper_id=wallpaper_id,
+            download_datetime=datetime.now(),
+            name=name,
+            email=email
+        )
+        db.add(download)
+        download_count_before = wallpaper.download_count
+
+        if download_count_before is None:
+            wallpaper.download_count = 1
+        else:
+            wallpaper.download_count += 1
+
+        db.commit()
+        db.refresh(wallpaper)
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        return Response(code="500",status="Error", message=f"Error: {e}").dict(exclude_none=True)

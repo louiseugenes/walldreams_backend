@@ -48,7 +48,7 @@ async def update_wallpaper(request: RequestWallpaper, db: Session = Depends(get_
     return Response(code="200",status="Ok", message="Category updated", result=_wallpaper).dict(exclude_none=True)
 
 @router.get("/download_wallpaper/{wallpaper_id}/")
-def download_wallpaper(wallpaper_id: int, resolution: str ="HD",db: Session = Depends(get_db)):
+def download_wallpaper(wallpaper_id: int, resolution: str ="HD", name: str="unknowm", email: str="unknowm", db: Session = Depends(get_db)):
     wallpaper = get_wallpaper(db=db, wallpaper_id=wallpaper_id)
     if not wallpaper:
         raise HTTPException(status_code=404, detail="Wallpaper not found")
@@ -62,5 +62,6 @@ def download_wallpaper(wallpaper_id: int, resolution: str ="HD",db: Session = De
     
     file_name = wallpaper.url.split("/")[-1]
     wallpaper_path = f"utils/resized_images/{resolutions[resolution]}_{file_name}"
+    record_download(db, wallpaper_id, name, email)
     
     return FileResponse(wallpaper_path)
