@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from category.models import *
 from database import Base
@@ -13,7 +13,9 @@ class Wallpaper(Base):
     category_id = Column(Integer, ForeignKey('category.category_id'))
     category = relationship("Category", back_populates="wallpapers")
     downloads = relationship("Download", back_populates="wallpaper")
-    upload_datetime = Column(DateTime)
+    upload_datetime = Column(DateTime, default=func.now())
+    download_count = Column(Integer)
+    like_count = Column(Integer)
 
 class Download(Base):
     __tablename__ = 'download'
@@ -21,7 +23,7 @@ class Download(Base):
     download_id = Column(Integer, primary_key=True)
     wallpaper_id = Column(Integer, ForeignKey('wallpaper.wallpaper_id'))
     wallpaper = relationship("Wallpaper", back_populates="downloads")
-    download_datetime = Column(DateTime)
+    download_datetime = Column(DateTime, default=func.now())
     name = Column(String)
     email = Column(String)
   
