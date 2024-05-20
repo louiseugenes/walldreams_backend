@@ -17,12 +17,31 @@ def get_db():
 
 
 @router.get("/")
-async def list_all_wallpapers(db: Session = Depends(get_db)):
-    return get_all_wallpapers(db)
+async def list_all_wallpapers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    wallpapers, total_elements = get_all_wallpapers(db, skip, limit)
+    return {"total_elements": total_elements, "wallpapers": wallpapers}
+
+@router.get("/list_most_downloaded_wallpapers")
+async def list_most_downloaded_wallpapers(db: Session = Depends(get_db)):
+    return get_most_downloaded_wallpapers(db)
+
+@router.get("/list_latest_wallpapers_released")
+async def list_latest_wallpapers_released(db: Session = Depends(get_db)):
+    return get_latest_wallpapers_released(db)
+
+@router.get("/like_wallpaper/{wallpaper_id}")
+async def list_latest_wallpapers_released(wallpaper_id: int, db: Session = Depends(get_db)):
+    return like_wallpaper(db, wallpaper_id)
+
+@router.get("/deslike_wallpaper/{wallpaper_id}")
+async def list_latest_wallpapers_released(wallpaper_id: int, db: Session = Depends(get_db)):
+    return deslike_wallpaper(db, wallpaper_id)
 
 @router.get("/{wallpaper_id}")
 async def read_wallpaper(wallpaper_id: int, db: Session = Depends(get_db)):
     _wallpaper = get_wallpaper(db, wallpaper_id)
+    if _wallpaper is None:
+        return Response(code="500",status="Error", message="Wallpaper not exists", result=_wallpaper).dict(exclude_none=True)
     return Response(code="200",status="Ok", message="Success get data", result=_wallpaper).dict(exclude_none=True)
 
 @router.post("/create")

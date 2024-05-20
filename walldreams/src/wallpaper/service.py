@@ -6,6 +6,7 @@ from fastapi import UploadFile, File
 import shutil
 from sqlalchemy.exc import SQLAlchemyError
 import os
+from sqlalchemy import desc, not_
 
 def resize_wallpaper(image_path: str, output_path: str, size: tuple):
     with Image.open(image_path) as img:
@@ -13,9 +14,44 @@ def resize_wallpaper(image_path: str, output_path: str, size: tuple):
         img.save(output_path)
 
 def get_all_wallpapers(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Wallpaper).offset(skip).limit(limit).all()    
+    query = db.query(Wallpaper).offset(skip).limit(limit)
+    wallpapers = query.all()
+    total_elements = query.count()
+    return wallpapers, total_elements
+
+def get_most_downloaded_wallpapers(db: Session, limit: int = 3):
+    return db.query(Wallpaper).filter(Wallpaper.download_count.isnot(None)
+            ).order_by(desc(Wallpaper.download_count)
+            ).limit(limit).all()
+
+def get_latest_wallpapers_released(db: Session, limit: int = 3):
+    return db.query(Wallpaper).order_by(desc(Wallpaper.upload_datetime)).limit(limit).all() 
 
 def get_wallpaper(db: Session, wallpaper_id: int):
+    return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
+
+def like_wallpaper(db: Session, wallpaper_id: int):
+    _wallpaper = get_wallpaper(db=db, wallpaper_id=wallpaper_id)
+
+    if _wallpaper.like_count is None:
+        _wallpaper.like_count = 1
+    
+    _wallpaper.like_count += 1
+
+    return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
+
+def deslike_wallpaper(db: Session, wallpaper_id: int):
+    _wallpaper = get_wallpaper(db=db, wallpaper_id=wallpaper_id)
+
+    if _wallpaper.like_count is None:
+        _wallpaper.like_count = None
+    
+    if _wallpaper.like_count == 1:
+        _wallpaper.like_count = None
+    
+    if _wallpaper.like_count > 1:
+        _wallpaper.like_count -= 1
+
     return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
 
 def create_wallpaper_db(db: Session, wallpaper: WallpaperSchema, file: UploadFile):
