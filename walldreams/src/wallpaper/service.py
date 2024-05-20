@@ -35,8 +35,13 @@ def like_wallpaper(db: Session, wallpaper_id: int):
 
     if _wallpaper.like_count is None:
         _wallpaper.like_count = 1
-    
+        db.commit()
+        db.refresh(_wallpaper)
+        return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
+
     _wallpaper.like_count += 1
+    db.commit()
+    db.refresh(_wallpaper)
 
     return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
 
@@ -45,14 +50,21 @@ def deslike_wallpaper(db: Session, wallpaper_id: int):
 
     if _wallpaper.like_count is None:
         _wallpaper.like_count = None
+        db.commit()
+        db.refresh(_wallpaper)
+        return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
     
     if _wallpaper.like_count == 1:
         _wallpaper.like_count = None
+        db.commit()
+        db.refresh(_wallpaper)
+        return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
     
     if _wallpaper.like_count > 1:
         _wallpaper.like_count -= 1
-
-    return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
+        db.commit()
+        db.refresh(_wallpaper)
+        return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
 
 def create_wallpaper_db(db: Session, wallpaper: WallpaperSchema, file: UploadFile):
     try:
