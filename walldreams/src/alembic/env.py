@@ -5,6 +5,7 @@ from alembic import context
 # Importe seus modelos SQLAlchemy
 from wallpaper.models import Base
 from category.models import Base
+from user.models import Base
 
 # Configure os loggers
 if context.config.config_file_name:

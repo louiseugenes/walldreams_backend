@@ -86,6 +86,23 @@ def download_wallpaper(wallpaper_id: int, resolution: str ="HD", name: str="unkn
     
     return FileResponse(wallpaper_path)
 
+@router.get("/v2/download_wallpaper/{wallpaper_id}/")
+def download_wallpaper(wallpaper_id: int, resolution: str ="HD", db: Session = Depends(get_db)):
+    wallpaper = get_wallpaper(db=db, wallpaper_id=wallpaper_id)
+    if not wallpaper:
+        raise HTTPException(status_code=404, detail="Wallpaper not found")
+    resolutions = {
+        "HD": "HD",
+        "FullHD": "FullHD",
+        "4K": "4K"
+    }
+    if resolution not in resolutions:
+        raise HTTPException(status_code=400, detail="Invalid resolution. Choose from HD, FullHD, or 4K.")
+    
+    file_name = wallpaper.url.split("/")[-1]
+    wallpaper_path = f"utils/resized_images/{resolutions[resolution]}_{file_name}"
+    return FileResponse(wallpaper_path)
+
 @router.get("/search/{wallpaper_keyword}")
 async def search_wallpaper(wallpaper_keyword: str, db: Session = Depends(get_db)):
     _category = search_category_db(db, wallpaper_keyword)
