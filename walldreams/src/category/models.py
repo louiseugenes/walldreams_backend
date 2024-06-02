@@ -9,3 +9,4 @@ class Category(Base):
     category_id = Column(Integer, primary_key=True)
     name = Column(String)
     wallpapers = relationship("Wallpaper", back_populates="category")
+    count = Column(Integer)

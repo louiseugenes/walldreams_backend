@@ -5,6 +5,7 @@ from .service import *
 from .schemas import *
 from typing import List
 from fastapi.responses import FileResponse
+from category.service import search_category_db,count_category_db
 
 router = APIRouter()
 
@@ -84,3 +85,21 @@ def download_wallpaper(wallpaper_id: int, resolution: str ="HD", name: str="unkn
     record_download(db, wallpaper_id, name, email)
     
     return FileResponse(wallpaper_path)
+
+@router.get("/search/{wallpaper_keyword}")
+async def search_wallpaper(wallpaper_keyword: str, db: Session = Depends(get_db)):
+    _category = search_category_db(db, wallpaper_keyword)
+    category_id = _category[0].category_id if _category else None
+
+    _wallpaper = search_wallpaper_db(db, category_id, wallpaper_keyword)
+    if _wallpaper is None:
+        return Response[Optional[dict]](code="500", status="Error", message="Wallpaper not exists", result=None).dict(exclude_none=True)
+    
+    processed_category_ids = set()
+
+    for wallpaper in _wallpaper:
+        if wallpaper.category_id not in processed_category_ids:
+            count_category_db(db, wallpaper.category_id)
+            processed_category_ids.add(wallpaper.category_id)
+
+    return Response(code="200",status="Ok", message="Wallpaper Found", result=_wallpaper).dict(exclude_none=True)
