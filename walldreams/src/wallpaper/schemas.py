@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from pydantic.fields import Field
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, List
 from pydantic.generics import GenericModel
 from datetime import datetime
 from fastapi import UploadFile, File
@@ -40,4 +40,4 @@ class Response(GenericModel,Generic[T]):
     code: str
     status: str
     message: str
-    result: Optional[T] = None
+    result: Optional[List[T]] = None

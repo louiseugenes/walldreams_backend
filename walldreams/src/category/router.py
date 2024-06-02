@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from .service import *
 from .schemas import *
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 
@@ -12,6 +13,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@router.get("/most_castegories_searched")
+async def list_most_searched_categories(db: Session = Depends(get_db)):
+    return get_most_searched_categories(db)
 
 @router.get("/")
 async def list_all_categories(db: Session = Depends(get_db)):
@@ -36,3 +41,13 @@ async def delete_category(category_id: int, db: Session = Depends(get_db)):
 async def update_category(request: RequestCategory, db: Session = Depends(get_db)):
     _category = update_category(db,category_id=request.parameter.id)
     return Response(code="200",status="Ok", message="Category updated", result=_category).dict(exclude_none=True)
+
+@router.get("/search/{category_keyword}", response_model=Response[Optional[dict]])
+async def search_category(category_keyword: str, db: Session = Depends(get_db)):
+    _category = search_category_db(db, category_keyword)
+    if _category is None:
+        return Response[Optional[dict]](code="500", status="Error", message="Category not exists", result=None).dict(exclude_none=True)
+    
+    dictResponse = jsonable_encoder(_category)
+    return Response(code="200",status="Ok", message="Category found!", result=dictResponse).dict(exclude_none=True)
+

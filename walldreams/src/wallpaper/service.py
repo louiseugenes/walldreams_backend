@@ -6,7 +6,8 @@ from fastapi import UploadFile, File
 import shutil
 from sqlalchemy.exc import SQLAlchemyError
 import os
-from sqlalchemy import desc, not_
+from sqlalchemy import desc, not_, or_
+from category.models import Category
 
 def resize_wallpaper(image_path: str, output_path: str, size: tuple):
     with Image.open(image_path) as img:
@@ -29,6 +30,25 @@ def get_latest_wallpapers_released(db: Session, limit: int = 3):
 
 def get_wallpaper(db: Session, wallpaper_id: int):
     return db.query(Wallpaper).filter(Wallpaper.wallpaper_id == wallpaper_id).first()
+
+def search_wallpaper_db(db: Session,category_id: int, wallpaper_keyword: str):
+    keyword_pattern = f"%{wallpaper_keyword}%"
+    
+    if category_id is not None:
+        result = db.query(Wallpaper).filter(
+            or_(
+                Wallpaper.category_id == category_id
+            )
+        ).all()
+        return result
+    else:
+        result = db.query(Wallpaper).filter(
+            or_(
+                Wallpaper.description.like(keyword_pattern),
+                Wallpaper.title.like(keyword_pattern)
+            )
+        ).all()
+        return result
 
 def like_wallpaper(db: Session, wallpaper_id: int):
     _wallpaper = get_wallpaper(db=db, wallpaper_id=wallpaper_id)
@@ -68,7 +88,6 @@ def deslike_wallpaper(db: Session, wallpaper_id: int):
 
 def create_wallpaper_db(db: Session, wallpaper: WallpaperSchema, file: UploadFile):
     try:
-
         category = db.query(Category).filter(Category.name == wallpaper.category).first()
 
         images_dir = "utils/images"
